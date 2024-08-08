@@ -1,0 +1,14 @@
+{
+    "PARAM_LORA_1_NAME": "angel\\\\angel_man_test00.safetensors",
+    "PARAM_LORA_1_STRENGTH": 0.6,
+    "PARAM_LORA_2_NAME": "angel\\\\angel_man_test00.safetensors",
+    "PARAM_LORA_2_STRENGTH": 0,
+    "PARAM_LORA_3_NAME": "angel\\\\angel_man_test00.safetensors",
+    "PARAM_LORA_3_STRENGTH": 0,
+    "PARAM_UPSCALE": 0.7,
+    "PARAM_PROMPT": "masterpiece, best quality, ultra detailed, tv anime, hand-written line, illustration, highly detailed",
+    "PARAM_DENOISE": 1,
+    "PARAM_CONTROLNET_1_STRENGTH": 0.4,
+    "PARAM_CONTROLNET_2_STRENGTH": 0.4,
+    "PARAM_CONTROLNET_3_STRENGTH": 0.4
+}

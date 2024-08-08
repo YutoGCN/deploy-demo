@@ -9,24 +9,26 @@
 '''
 
 import os
-import shutil
+import zipfile
 import requests
 import time
 from endpoint import BASE_URL
+import json
 
 class SolaClient:
     def check_folder_structure(folder:str):
-        check_folders = ['COLOR','LINE','vector1-64-8']
+        check_folders = ['COLOR', 'LINE', 'vector1-64-8']
 
         # check folder name
         for check_folder in check_folders:
-            if os.path.exists(os.path.join(folder, check_folder)) == False:
+            if not os.path.exists(os.path.join(folder, check_folder)):
                 raise ValueError(f'{os.path.join(folder, check_folder)} is not found')
 
         # check file count
         file_count_tmp = -1
         for check_folder in check_folders:
-            file_count = len(os.listdir(os.path.join(folder, check_folder)))
+            png_files = [f for f in os.listdir(os.path.join(folder, check_folder)) if f.endswith('.png')]
+            file_count = len(png_files)
             if file_count == 0:
                 raise ValueError(f'{os.path.join(folder, check_folder)} is empty')
             if file_count_tmp == -1:
@@ -38,9 +40,51 @@ class SolaClient:
         return len(os.listdir(os.path.join(folder)))
 
     def compress_materials(material_folder, output_path):
-        shutil.make_archive(output_path.replace(".zip","") , 'zip', material_folder)
+        if not os.path.exists(os.path.dirname(output_path)):
+            os.makedirs(os.path.dirname(output_path))
+        with zipfile.ZipFile(output_path, 'w') as zipf:
+            for root, dirs, files in os.walk(material_folder):
+                for file in files:
+                    if file.endswith('.png'):
+                        file_path = os.path.join(root, file)
+                        arcname = os.path.relpath(file_path, material_folder)  # material_folderからの相対パス
+                        zipf.write(file_path, arcname)
 
-    def request(folder, user_name, lora_option, scale_option):
+    import json
+
+    def validate_json(json_str):
+        data = json.loads(json_str)
+        
+        lora_names = [f"PARAM_LORA_{i}_NAME" for i in range(1, 4)]
+        valid_keys = lora_names + [
+            "PARAM_UPSCALE",
+            "PARAM_PROMPT",
+            "PARAM_DENOISE",
+            "PARAM_CONTROLNET_1_STRENGTH",
+            "PARAM_CONTROLNET_2_STRENGTH",
+            "PARAM_CONTROLNET_3_STRENGTH"
+        ]
+
+        allowed_lora_names = [
+            "angel\\\\angel_man_test00.safetensors",
+            "angel\\\\angel_woman_test01-000120.safetensors"
+        ]
+
+        for key, value in data.items():
+            if key in lora_names:
+                if value not in allowed_lora_names:
+                    raise ValueError(f"Invalid value for {key}: {value}, must be one of {allowed_lora_names}")
+            elif key == "PARAM_UPSCALE":
+                if not (0.7 <= value <= 1):
+                    raise ValueError(f"Invalid value for {key}: {value}, must be in [0.7, 1]")
+            elif key.startswith("PARAM_") and key.endswith("_STRENGTH"):
+                if not (0 <= value <= 1):
+                    raise ValueError(f"Invalid value for {key}: {value}, must be in [0, 1]")
+            elif key not in valid_keys:
+                raise ValueError(f"Unknown key: {key}")
+
+
+    def request(folder, user_name, job_name, params_comfy_path):
         """
         @brief Request a job to the server
         @param folder The name of the folder containing the materials
@@ -49,13 +93,14 @@ class SolaClient:
         @param scale_option The option for the scale, 'upper' or 'whole'
         @return The run_id of the job
         """
-        # check lora_option
-        if lora_option not in ['man','woman']:
-            raise ValueError(f'lora_option "{lora_option}" is invalid, please select "man" or "woman".')
-        
-        # check scale_option
-        if scale_option not in ["upper","whole"]:
-            raise ValueError(f'scale_option "{scale_option}" is invalid, please select "upper" or "whole".')
+
+        if not os.path.exists(params_comfy_path):
+            raise ValueError(f'{params_comfy_path} is not found')
+
+        with open(params_comfy_path, 'r', encoding="utf-8") as f:
+            params_comfy = f.read()
+
+        SolaClient.validate_json(params_comfy)
         
         # check folder structure
         SolaClient.check_folder_structure(folder)
@@ -69,7 +114,7 @@ class SolaClient:
         # send request to server
         url = f"{BASE_URL}/request"
         files = {'file': open(f'tmp/{folder}.zip', 'rb')}
-        params = {'user_name': user_name,'lora_option': lora_option, 'scale_option': scale_option, }
+        params = {'user_name': user_name, 'job_name': job_name, 'params_comfy': params_comfy}
         response = requests.post(url, files=files, params=params)
 
         if response.status_code != 200:
@@ -113,3 +158,44 @@ class SolaClient:
         with open(output_path, 'wb') as f:
             f.write(response.content)
         return output_path
+    
+    def terminate(run_id):
+        """
+        @brief Terminate the job
+        @param run_id The run_id of the job
+        @return The status of the termination
+        """
+        url = f"{BASE_URL}/terminate"
+        params = {'run_id': run_id}
+        response = requests.post(url, params=params)
+
+        if response.status_code != 200:
+            raise ValueError(f'Request failed with status code {response.status_code}, message: {response.json()}')
+        
+    def list_jobs_by_user(user_name):
+        """
+        @brief List the jobs of the given user
+        @param user_name The name of the user
+        @return The list of jobs
+        """
+        url = f"{BASE_URL}/job_list_by_user"
+        params = {'user_name': user_name}
+        response = requests.get(url, params=params)
+
+        if response.status_code != 200:
+            raise ValueError(f'Request failed with status code {response.status_code}, message: {response.json()}')
+        
+        return response.json().get('jobs')
+    
+    def list_all_jobs():
+        """
+        @brief List all jobs
+        @return The list of jobs
+        """
+        url = f"{BASE_URL}/job_list_all"
+        response = requests.get(url)
+
+        if response.status_code != 200:
+            raise ValueError(f'Request failed with status code {response.status_code}, message: {response.json()}')
+        
+        return response.json().get('jobs')

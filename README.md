@@ -3,7 +3,7 @@ marp: true
 theme: gaia
 size: 16:9
 paginate: true
-header: sola project 2024/7/29
+header: sola project 2024/8/8
 footer: © 2024 Love Machine Inc.
 ---
 <!--
@@ -17,6 +17,14 @@ _paginate: false
 _header: ""
 -->
 
+# 今回の変更点
+ - png以外を無視することでmacOSの生成ファイルを無視
+ - json decodeの失敗時、再試行することで通信エラーに対処
+ - 進捗表示機能を追加
+ - 中断機能を追加
+
+以前のクライアントコードは使用しないようお願いいたします。
+
 # 環境構築
 ```
 git clone https://github.com/YutoGCN/deploy-demo
@@ -26,75 +34,51 @@ cd deploy-demo
 pip3 install -r requirements.txt
 ```
 
+# `main.py` の設定
+
+`main.py`の上部に設定を行う部分があります。
+
+```
+parameters = {
+    "material_folder": "test", # 素材のフォルダ
+    "user_name": "lovemachine", # ユーザー名（任意）
+    "job_name": "test", # ジョブ名（任意）
+    "params_comfy_path": "params_comfy.json", # パラメーターファイルのパス
+    "output_path": "test.mp4" # 動画を保存したいパス
+}
+```
+
+パラメーターファイルは動画生成の設定を行うファイルです。
+
 # エンドポイントの設定
+
 ```
 BASE_URL = ""
 ```
 
 `endopoint.py`の`""`の間にお渡ししたエンドポイントのurlを入れてください。
 
+# パラメータファイルについて
 
-# 実行
+`params_comfy.json` が例です。`"PARAM_PROMPT"`にはプロンプトの文字列を入れてください。
+
+`PARAM_LORA_x_NAME` は `"angel\\\\angel_man_test00.safetensors"` か `"angel\\\\angel_woman_test01-000120.safetensors"`のどちらかを指定してください。
+
+`"PARAM_UPSCALE"`は0.7から1.0の値にしてください。
+その他の数値は0.0から1.0の値にしてください。`PARAM_LORA_x_STRENGTH`はLoraの強さで、0にするとLoraがない状態になります。
+
+# `main.py` の実行
 
 ```
-python3 main.py
+python main.py
 ```
 
-main.pyの簡略化された中身
-```
-run_id = SolaClient.request('test_man', 'user-demo-1', 'man', 'upper')
-
-while True:
-    status = SolaClient.get_status(run_id)
-
-    if status == 'FINISHED':
-        SolaClient.get_movie(run_id, f'tmp\\{run_id}.mp4')
-        break
-```
+以下が順に実行されます。待機/実行中にCtrl+Cすることでジョブを停止させることができます。`main.py`も同時に終了します。
+ - ジョブの投入
+ - 待ちがある場合待機
+ - 実行（進捗が表示されます）
+ - ダウンロード
 
 
-# 生成要求関数
-```
-run_id = SolaClient.request('material_folder', 'user_name', 'lora_option', 'scale_option')
-```
 
-生成の要求を行う関数。パラメータは以下。
-
-`user_name`: ユーザー名、お好きな文字列
-`lora_option`: 何のloraを使うか、`'man'` or `'woman'`
-`scale_option`: 上半身か全身か、`'upper'` or `'whole'`
-
-返り値は以下。
-`run_id`: 要求ごとに固有のIDが返される
-
-# 生成進捗確認関数
-```
-status = SolaClient.get_status(run_id)
-```
-
-生成の進捗を確認する関数。
-
-`run_id`: 生成の要求を行った際に返されたID
-
-`status`: 生成の進捗状況が返される。`'PENDING'`, `'RUNNING'`, `'FINISHED'`, `'ERROR'` のいずれか
-
-
-# 生成動画ダウンロード関数
-```
-downloaded_path =  SolaClient.get_movie(run_id, download_path_you_want)
-```
-
-生成された動画をダウンロードする関数。
-
-`run_id`: 生成の要求を行った際に返されたID
-`download_path_you_want`: ダウンロードしたい場所
-
-`downloaded_path`: 実際にダウンロードされた場所が返される、失敗ならNoneが返される
-
-# 展望
-生成のパラメータを増加させる予定
-
- - promptを指定可能にする
- - loraの種類を増加
- - controlnetの比重を変更可能にする 等
 
