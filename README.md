@@ -50,6 +50,13 @@ parameters = {
 
 パラメーターファイルは動画生成の設定を行うファイルです。
 
+# パラメータファイルについて
+
+`params_comfy.json` が例です。`"PARAM_PROMPT"`はプロンプトです。
+`PARAM_LORA_x_NAME` は `"angel\\\\angel_man_test00.safetensors"` か `"angel\\\\angel_woman_test01-000120.safetensors"`のどちらかを指定してください。
+`"PARAM_UPSCALE"`は0.7から1.0の値にしてください。0.7がHD相当の生成、1.0がFullHD相当の生成です。ただし、出力はFullHD固定になります。値を大きくすると計算時間が伸びます。
+その他の数値は0.0から1.0の値にしてください。`PARAM_LORA_x_STRENGTH`はLoraの強さで、0にするとLoraがない状態になります。
+
 # エンドポイントの設定
 
 ```
@@ -57,15 +64,6 @@ BASE_URL = ""
 ```
 
 `endopoint.py`の`""`の間にお渡ししたエンドポイントのurlを入れてください。
-
-# パラメータファイルについて
-
-`params_comfy.json` が例です。`"PARAM_PROMPT"`にはプロンプトの文字列を入れてください。
-
-`PARAM_LORA_x_NAME` は `"angel\\\\angel_man_test00.safetensors"` か `"angel\\\\angel_woman_test01-000120.safetensors"`のどちらかを指定してください。
-
-`"PARAM_UPSCALE"`は0.7から1.0の値にしてください。
-その他の数値は0.0から1.0の値にしてください。`PARAM_LORA_x_STRENGTH`はLoraの強さで、0にするとLoraがない状態になります。
 
 # `main.py` の実行
 
