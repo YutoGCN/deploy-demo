@@ -10,7 +10,7 @@ parameters = {
     "user_name": "lovemachine",
     "job_name": "test",
     "params_comfy_path": "params_comfy.json",
-    "output_path": "test.mp4"
+    "output_path": "test.gif"
 }
 
 def main(*,logger):
@@ -20,7 +20,7 @@ def main(*,logger):
         try:
             run_id = SolaClient.request(parameters["material_folder"], parameters["user_name"], parameters["job_name"], parameters["params_comfy_path"])
         except Exception as e:
-            logger.error("Error ocurred while requesting job")
+            logger.error(f"Error ocurred while requesting job, {e}")
             logger.error("Prease retry")
             return
         else:

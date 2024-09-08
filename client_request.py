@@ -50,38 +50,74 @@ class SolaClient:
                         arcname = os.path.relpath(file_path, material_folder)  # material_folderからの相対パス
                         zipf.write(file_path, arcname)
 
-    import json
-
     def validate_json(json_str):
         data = json.loads(json_str)
-        
-        lora_names = [f"PARAM_LORA_{i}_NAME" for i in range(1, 4)]
-        valid_keys = lora_names + [
-            "PARAM_UPSCALE",
-            "PARAM_PROMPT",
-            "PARAM_DENOISE",
-            "PARAM_CONTROLNET_1_STRENGTH",
-            "PARAM_CONTROLNET_2_STRENGTH",
-            "PARAM_CONTROLNET_3_STRENGTH"
-        ]
+        parameters = json.loads(json.dumps(data['parameters']))
+        workflow_name = data['workflow_name']
 
-        allowed_lora_names = [
-            "angel\\\\angel_man_test00.safetensors",
-            "angel\\\\angel_woman_test01-000120.safetensors"
-        ]
+        workflow_list = ['dafault','by_character']
 
-        for key, value in data.items():
-            if key in lora_names:
-                if value not in allowed_lora_names:
-                    raise ValueError(f"Invalid value for {key}: {value}, must be one of {allowed_lora_names}")
-            elif key == "PARAM_UPSCALE":
-                if not (0.7 <= value <= 1):
-                    raise ValueError(f"Invalid value for {key}: {value}, must be in [0.7, 1]")
-            elif key.startswith("PARAM_") and key.endswith("_STRENGTH"):
-                if not (0 <= value <= 1):
-                    raise ValueError(f"Invalid value for {key}: {value}, must be in [0, 1]")
-            elif key not in valid_keys:
-                raise ValueError(f"Unknown key: {key}")
+        if workflow_name not in workflow_list:
+            raise ValueError(f"Invalid value for workflow_name: {workflow_name}, must be one of {workflow_list}")
+
+        if workflow_name == 'dafault':
+            lora_names = [f"PARAM_LORA_{i}_NAME" for i in range(1, 4)]
+            valid_keys = lora_names + [
+                "PARAM_UPSCALE",
+                "PARAM_PROMPT",
+                "PARAM_DENOISE",
+                "PARAM_CONTROLNET_1_STRENGTH",
+                "PARAM_CONTROLNET_2_STRENGTH",
+                "PARAM_CONTROLNET_3_STRENGTH"
+            ]
+
+            allowed_lora_names = [
+                "angel\\\\angel_man_test00.safetensors",
+                "angel\\\\angel_woman_test01-000120.safetensors"
+            ]
+
+            for key, value in parameters.items():
+                if key in lora_names:
+                    if value not in allowed_lora_names:
+                        raise ValueError(f"Invalid value for {key}: {value}, must be one of {allowed_lora_names}")
+                elif key == "PARAM_UPSCALE":
+                    if not (0.7 <= value <= 1):
+                        raise ValueError(f"Invalid value for {key}: {value}, must be in [0.7, 1]")
+                elif key.startswith("PARAM_") and key.endswith("_STRENGTH"):
+                    if not (0 <= value <= 1):
+                        raise ValueError(f"Invalid value for {key}: {value}, must be in [0, 1]")
+                elif key not in valid_keys:
+                    raise ValueError(f"Unknown key: {key}")
+
+        elif workflow_name == 'by_character':
+            lora_names = [f"PARAM_LORA_{i}_NAME" for i in range(1, 2)]
+            valid_keys = lora_names + [
+                "PARAM_UPSCALE",
+                "PARAM_PROMPT",
+                "PARAM_DENOISE",
+                "PARAM_CONTROLNET_1_STRENGTH",
+                "PARAM_CONTROLNET_2_STRENGTH",
+                "PARAM_CONTROLNET_3_STRENGTH"
+            ]
+
+            allowed_lora_names = [
+                "angel\\\\angel_man_test00.safetensors",
+                "angel\\\\angel_woman_test01-000120.safetensors"
+            ]
+
+            for key, value in parameters.items():
+                if key in lora_names:
+                    if value not in allowed_lora_names:
+                        raise ValueError(f"Invalid value for {key}: {value}, must be one of {allowed_lora_names}")
+                elif key == "PARAM_UPSCALE":
+                    if not (0.7 <= value <= 1):
+                        raise ValueError(f"Invalid value for {key}: {value}, must be in [0.7, 1]")
+                elif key.startswith("PARAM_") and key.endswith("_STRENGTH"):
+                    if not (0 <= value <= 1):
+                        raise ValueError(f"Invalid value for {key}: {value}, must be in [0, 1]")
+                elif key not in valid_keys:
+                    raise ValueError(f"Unknown key: {key}")
+
 
 
     def request(folder, user_name, job_name, params_comfy_path):
