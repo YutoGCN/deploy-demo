@@ -3,7 +3,7 @@ marp: true
 theme: gaia
 size: 16:9
 paginate: true
-header: sola project 2024/9/9
+header: sola project 2024/9/17
 footer: © 2024 Love Machine Inc.
 ---
 <!--
@@ -18,10 +18,44 @@ _header: ""
 -->
 
 # 今回の変更点
- - キャラ別生成フローに対応
- - 生成ファイルのフォーマットを`.gif`に変更
+ - 設定ファイルの構成を変更
 
-以前のクライアントコードは使用しないようお願いいたします。
+`main.py`の上部にて指定していたパラメータが`params_comfy.json`に移動しました。
+
+# 使用方法
+```
+python3 main.py (params_comfy.json)
+```
+実行時引数としてパラメータのjsonのパスを要求します。
+
+# 設定すべき項目
+
+ - `endpoints.py`: エンドポイントの指定
+ - `params_comfy.json`: 素材フォルダ、生成フローの指定、パラメータの設定
+
+`params_comfy.json` が通常ワークフローの例です。
+`params_comfy_by_character.json`がキャラ別生成フローの例です。
+
+# パラメータファイルについて
+
+
+```
+{
+    "material_folder": "test", # 素材のフォルダ
+    "user_name": "lovemachine", # ユーザー名（任意）
+    "job_name": "test", # ジョブ名（任意）
+    "output_path": "test.gif" # 動画を保存したいパス
+
+    "workflow_name": "by_character",
+    "parameters":{　
+```
+
+
+
+
+`"workflow_name"`にてワークフローの指定が行えます。`"dafault"`または `"by_character"`を指定してください。
+
+# 以下前回から変わらない点
 
 # 環境構築
 ```
@@ -32,28 +66,6 @@ cd deploy-demo
 pip3 install -r requirements.txt
 ```
 
-# 設定すべき項目
-
- - `main.py`: 素材・パラメータの場所などを指定
- - `endpoints.py`: エンドポイントの指定
- - `params_comfy.json`: 生成フローの指定、パラメータの設定
-
-# `main.py` の設定
-
-`main.py`の上部に設定を行う部分があります。
-
-```
-parameters = {
-    "material_folder": "test", # 素材のフォルダ
-    "user_name": "lovemachine", # ユーザー名（任意）
-    "job_name": "test", # ジョブ名（任意）
-    "params_comfy_path": "params_comfy.json", # パラメーターファイルのパス
-    "output_path": "test.gif" # 動画を保存したいパス
-}
-```
-
-パラメーターファイルは動画生成の設定を行うファイルです。
-
 # エンドポイントの設定
 
 ```
@@ -61,20 +73,6 @@ BASE_URL = ""
 ```
 
 `endopoint.py`の`""`の間にお渡ししたエンドポイントのurlを入れてください。
-
-# パラメータファイルについて
-
-`params_comfy.json` が通常ワークフローの例です。
-
-`params_comfy_by_character.json`がキャラ別生成フローの例です。
-
-```
-{
-    "workflow_name": "by_character",
-    "parameters":{　
-```
-
-`"workflow_name"`にてワークフローの指定が行えます。`"dafault"`または `"by_character"`を指定してください。
 
 # 各種パラメータの説明(1)
 通常ワークフローでは3種、キャラ別生成フローでは1種のLoraを指定できます。
@@ -99,7 +97,7 @@ Loraを適用しない場合は`PARAM_LORA_x_STRENGTH`を0.0としてくださ�
 # `main.py` の実行
 
 ```
-python main.py
+python main.py (params_comfy.json)
 ```
 
 以下が順に実行されます。待機/実行中にCtrl+Cすることでジョブを停止させることができます。`main.py`も同時に終了します。

@@ -120,7 +120,7 @@ class SolaClient:
 
 
 
-    def request(folder, user_name, job_name, params_comfy_path):
+    def request(folder, user_name, job_name, params_comfy):
         """
         @brief Request a job to the server
         @param folder The name of the folder containing the materials
@@ -129,12 +129,6 @@ class SolaClient:
         @param scale_option The option for the scale, 'upper' or 'whole'
         @return The run_id of the job
         """
-
-        if not os.path.exists(params_comfy_path):
-            raise ValueError(f'{params_comfy_path} is not found')
-
-        with open(params_comfy_path, 'r', encoding="utf-8") as f:
-            params_comfy = f.read()
 
         SolaClient.validate_json(params_comfy)
         
@@ -191,6 +185,10 @@ class SolaClient:
         if response.status_code != 200:
             raise ValueError(f'Request failed with status code {response.status_code}, message: {response.json()}')
         
+        # make directory
+        if not os.path.exists(os.path.dirname(output_path)):
+            os.makedirs(os.path.dirname(output_path))
+            
         with open(output_path, 'wb') as f:
             f.write(response.content)
         return output_path

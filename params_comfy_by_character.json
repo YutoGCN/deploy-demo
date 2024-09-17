@@ -1,4 +1,9 @@
 {
+    "material_folder": "test",
+    "user_name": "lovemachine",
+    "job_name": "test20240912",
+    "output_path": "output/test.gif",
+    
     "workflow_name": "by_character",
     "parameters":{
         "PARAM_LORA_1_NAME": "angel\\\\angel_man_test00.safetensors",

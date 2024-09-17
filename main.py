@@ -4,21 +4,15 @@ import os
 from tqdm import tqdm
 from logging import getLogger, StreamHandler, DEBUG, INFO, Formatter
 import re
+import sys
+import json
 
-parameters = {
-    "material_folder": "test",
-    "user_name": "lovemachine",
-    "job_name": "test",
-    "params_comfy_path": "params_comfy.json",
-    "output_path": "test.gif"
-}
-
-def main(*,logger):
+def main(parameters,*,logger):
     try:
         run_id = None
         # add job into the server
         try:
-            run_id = SolaClient.request(parameters["material_folder"], parameters["user_name"], parameters["job_name"], parameters["params_comfy_path"])
+            run_id = SolaClient.request(parameters["material_folder"], parameters["user_name"], parameters["job_name"], json.dumps(parameters))
         except Exception as e:
             logger.error(f"Error ocurred while requesting job, {e}")
             logger.error("Prease retry")
@@ -118,6 +112,7 @@ def main(*,logger):
     
 
 if __name__ == '__main__':
+    # logger setting
     logger = getLogger(__name__)
     handler = StreamHandler()
     handler.setLevel(DEBUG)
@@ -129,4 +124,19 @@ if __name__ == '__main__':
     logger.addHandler(handler)
     logger.propagate = False
 
-    main(logger=logger)
+    # main code parameter: params_comfy.json
+    args = sys.argv
+    if len(args) != 2:
+        logger.error("Invalid arguments, give the parameter file")
+        sys.exit(1)
+    
+    # load parameters
+    parameters = None
+    try:
+        with open(args[1], "r") as f:
+            parameters = json.load(f)
+    except Exception as e:
+        logger.error(f"Error ocurred while loading parameter file: {e}")
+        sys.exit(1)
+
+    main(parameters,logger=logger)
