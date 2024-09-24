@@ -5,6 +5,8 @@ import os
 import sys
 import json
 
+# USER_NAME = 'lvm_ngc'
+
 def main(parameters,*,logger):
     mode = input('Enter mode (1: request, 2: list, 3: status, 4: download, 5: terminate): ')
     
@@ -12,6 +14,7 @@ def main(parameters,*,logger):
     material_folder = parameters["material_folder"]
     USER_NAME = parameters["user_name"]
     job_name = parameters["job_name"]
+    output_path = parameters["output_path"]
     params_comfy_path = json.dumps(parameters)
     
 
@@ -43,7 +46,6 @@ def main(parameters,*,logger):
             logger.info(f"Status: {status}")
     elif mode == '4':
         run_id = input('Enter run_id: ')
-        output_path = f"output_{run_id}.gif"
         try:
             output_path = SolaClient.get_movie(run_id, output_path)
         except ValueError as e:
