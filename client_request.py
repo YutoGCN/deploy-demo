@@ -187,7 +187,8 @@ class SolaClient:
         
         # make directory
         if not os.path.exists(os.path.dirname(output_path)):
-            os.makedirs(os.path.dirname(output_path))
+            print(output_path)
+            os.makedirs(os.path.dirname(output_path),exist_ok=True)
             
         with open(output_path, 'wb') as f:
             f.write(response.content)
