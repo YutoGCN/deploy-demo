@@ -1,11 +1,12 @@
 {
     "material_folder": "test",
     "user_name": "lovemachine",
-    "job_name": "test20240912",
-    "output_path": "output/test.gif",
+    "job_name": "default_20240929",
+    "output_path": "output/test",
 
     "workflow_name": "dafault",
     "parameters":{
+        "PARAM_BASEMODEL": "animelike25D_animelike25DV11Pruned.safetensors",
         "PARAM_LORA_1_NAME": "angel\\\\angel_man_test00.safetensors",
         "PARAM_LORA_1_STRENGTH": 0.6,
         "PARAM_LORA_2_NAME": "angel\\\\angel_man_test00.safetensors",

@@ -1,0 +1,23 @@
+{
+    "material_folder": "test",
+    "user_name": "lovemachine",
+    "job_name": "partialCN-Chara_20240929",
+    "output_path": "output/test",
+    
+    "workflow_name": "PartialCN-Chara",
+    "parameters":{
+        "PARAM_BASEMODEL": "cetusMix_Whalefall2.safetensors",
+        "PARAM_LORA_1_NAME": "angel\\\\angel_man_test00.safetensors",
+        "PARAM_LORA_1_STRENGTH": 0.6,
+        "PARAM_UPSCALE": 0.7,
+        "PARAM_PROMPT": "masterpiece, best quality, ultra detailed, tv anime, hand-written line, illustration, highly detailed",
+        "PARAM_MASK_PROMPT": "",
+        "PARAM_MASK_OBJECT_PROMPT": "face",
+        "PARAM_DENOISE": 1,
+        "PARAM_CONTROLNET_LINEART_WITH_MASK_STRENGTH": 0.8,
+        "PARAM_CONTROLNET_LINEART_OUT_MASK_STRENGTH": 0.4,
+        "PARAM_CONTROLNET_LIGHTBASEDPICTURE_STRENGTH": 0.4,
+        "PARAM_CONTROLNET_TILE_WITH_MASK_STRENGTH": 0.6,
+        "PARAM_CONTROLNET_TILE_OUT_MASK_STRENGTH": 0.4
+    }
+}

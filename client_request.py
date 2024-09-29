@@ -14,6 +14,7 @@ import requests
 import time
 from endpoint import BASE_URL
 import json
+import io
 
 class SolaClient:
     def check_folder_structure(folder:str):
@@ -55,7 +56,7 @@ class SolaClient:
         parameters = json.loads(json.dumps(data['parameters']))
         workflow_name = data['workflow_name']
 
-        workflow_list = ['dafault','by_character']
+        workflow_list = ['dafault','by_character','PartialCN-Chara']
 
         if workflow_name not in workflow_list:
             raise ValueError(f"Invalid value for workflow_name: {workflow_name}, must be one of {workflow_list}")
@@ -63,6 +64,7 @@ class SolaClient:
         if workflow_name == 'dafault':
             lora_names = [f"PARAM_LORA_{i}_NAME" for i in range(1, 4)]
             valid_keys = lora_names + [
+                "PARAM_BASEMODEL",
                 "PARAM_UPSCALE",
                 "PARAM_PROMPT",
                 "PARAM_DENOISE",
@@ -76,10 +78,18 @@ class SolaClient:
                 "angel\\\\angel_woman_test01-000120.safetensors"
             ]
 
+            allowed_base_models = [
+                "animelike25D_animelike25DV11Pruned.safetensors",
+                "cetusMix_Whalefall2.safetensors"
+            ]
+
             for key, value in parameters.items():
                 if key in lora_names:
                     if value not in allowed_lora_names:
                         raise ValueError(f"Invalid value for {key}: {value}, must be one of {allowed_lora_names}")
+                elif key == "PARAM_BASEMODEL":
+                    if value not in allowed_base_models:
+                        raise ValueError(f"Invalid value for {key}: {value}, must be one of {allowed_base_models}")
                 elif key == "PARAM_UPSCALE":
                     if not (0.7 <= value <= 1):
                         raise ValueError(f"Invalid value for {key}: {value}, must be in [0.7, 1]")
@@ -92,6 +102,7 @@ class SolaClient:
         elif workflow_name == 'by_character':
             lora_names = [f"PARAM_LORA_{i}_NAME" for i in range(1, 2)]
             valid_keys = lora_names + [
+                "PARAM_BASEMODEL",
                 "PARAM_UPSCALE",
                 "PARAM_PROMPT",
                 "PARAM_DENOISE",
@@ -105,10 +116,60 @@ class SolaClient:
                 "angel\\\\angel_woman_test01-000120.safetensors"
             ]
 
+            allowed_base_models = [
+                "animelike25D_animelike25DV11Pruned.safetensors",
+                "cetusMix_Whalefall2.safetensors"
+            ]
+
             for key, value in parameters.items():
                 if key in lora_names:
                     if value not in allowed_lora_names:
                         raise ValueError(f"Invalid value for {key}: {value}, must be one of {allowed_lora_names}")
+                elif key == "PARAM_BASEMODEL":
+                    if value not in allowed_base_models:
+                        raise ValueError(f"Invalid value for {key}: {value}, must be one of {allowed_base_models}")
+                elif key == "PARAM_UPSCALE":
+                    if not (0.7 <= value <= 1):
+                        raise ValueError(f"Invalid value for {key}: {value}, must be in [0.7, 1]")
+                elif key.startswith("PARAM_") and key.endswith("_STRENGTH"):
+                    if not (0 <= value <= 1):
+                        raise ValueError(f"Invalid value for {key}: {value}, must be in [0, 1]")
+                elif key not in valid_keys:
+                    raise ValueError(f"Unknown key: {key}")
+                
+        elif workflow_name == 'PartialCN-Chara':
+            lora_names = [f"PARAM_LORA_{i}_NAME" for i in range(1, 2)]
+            valid_keys = lora_names + [
+                "PARAM_BASEMODEL",
+                "PARAM_UPSCALE",
+                "PARAM_PROMPT",
+                "PARAM_MASK_PROMPT",
+                "PARAM_MASK_OBJECT_PROMPT",
+                "PARAM_DENOISE",
+                "PARAM_CONTROLNET_LINEART_WITH_MASK_STRENGTH",
+                "PARAM_CONTROLNET_LINEART_OUT_MASK_STRENGTH",
+                "PARAM_CONTROLNET_LIGHTBASEDPICTURE_STRENGTH",
+                "PARAM_CONTROLNET_TILE_WITH_MASK_STRENGTH",
+                "PARAM_CONTROLNET_TILE_OUT_MASK_STRENGTH"
+            ]
+
+            allowed_lora_names = [
+                "angel\\\\angel_man_test00.safetensors",
+                "angel\\\\angel_woman_test01-000120.safetensors"
+            ]
+
+            allowed_base_models = [
+                "animelike25D_animelike25DV11Pruned.safetensors",
+                "cetusMix_Whalefall2.safetensors"
+            ]
+
+            for key, value in parameters.items():
+                if key in lora_names:
+                    if value not in allowed_lora_names:
+                        raise ValueError(f"Invalid value for {key}: {value}, must be one of {allowed_lora_names}")
+                elif key == "PARAM_BASEMODEL":
+                    if value not in allowed_base_models:
+                        raise ValueError(f"Invalid value for {key}: {value}, must be one of {allowed_base_models}")
                 elif key == "PARAM_UPSCALE":
                     if not (0.7 <= value <= 1):
                         raise ValueError(f"Invalid value for {key}: {value}, must be in [0.7, 1]")
@@ -167,12 +228,12 @@ class SolaClient:
         
         return response.json().get('status')[0]
     
-    def get_movie(run_id, output_path):
+    def get_movie(run_id, output_dir):
         """
         @brief get movie function
         @param run_id: run_id
-        @param output_path: movie path you want to save
-        @return output_path: movie path, if failed return None
+        @param output_dir: directory to extract the movie
+        @return output_dir: directory path with extracted movie, if failed return None
         """
         status = SolaClient.get_status(run_id)
         if status != 'FINISHED':
@@ -185,14 +246,17 @@ class SolaClient:
         if response.status_code != 200:
             raise ValueError(f'Request failed with status code {response.status_code}, message: {response.json()}')
         
-        # make directory
-        if not os.path.exists(os.path.dirname(output_path)):
-            print(output_path)
-            os.makedirs(os.path.dirname(output_path),exist_ok=True)
-            
-        with open(output_path, 'wb') as f:
-            f.write(response.content)
-        return output_path
+        # make output directory
+        os.makedirs(output_dir, exist_ok=True)
+        
+        try:
+            # extract zip file
+            with zipfile.ZipFile(io.BytesIO(response.content)) as z:
+                z.extractall(output_dir)
+        except zipfile.BadZipFile:
+            raise ValueError('Response content is not a valid zip file')
+
+        return output_dir
     
     def terminate(run_id):
         """
