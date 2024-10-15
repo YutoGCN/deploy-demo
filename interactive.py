@@ -102,8 +102,8 @@ def main(parameters, mode, run_id, *, logger, param_file_path):
         elif internal_mode == 'download':
             try:
                 downloaded_path = SolaClient.get_movie(selected_run_id, output_path)
-            except ValueError as e:
-                logger.error("An error occurred while downloading the movie.")
+            except Exception as e:
+                logger.error(f"An error occurred while downloading the movie, {e}")
                 logger.error("Please try again.")
             else:
                 if downloaded_path is None:
